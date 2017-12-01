@@ -1,4 +1,4 @@
-package id.educo.iak_intermediate;
+package id.educo.popularmovies;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
