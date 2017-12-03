@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "id.educo.iak_intermediate"
+        applicationId "id.educo.popularmovies"
         minSdkVersion 22
         targetSdkVersion 26
         versionCode 1
@@ -17,7 +17,7 @@ android {
         }
     }
 
-    compileOptions{
+    compileOptions {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
