@@ -33,17 +33,25 @@ import id.educo.popularmovies.model.Trailer;
 import id.educo.popularmovies.utils.NetworkUtils;
 import id.educo.popularmovies.utils.RecyclerViewItemClickListener;
 
-public class DetailActivity extends AppCompatActivity implements RecyclerViewItemClickListener{
+public class DetailActivity extends AppCompatActivity implements RecyclerViewItemClickListener {
 
-    @BindView(R.id.tv_movie_title) TextView movieTitle;
-    @BindView(R.id.tv_release_date) TextView releaseDate;
-    @BindView(R.id.tv_vote_average) TextView voteAverage;
-    @BindView(R.id.tv_overview) TextView overview;
-    @BindView(R.id.iv_poster_path) ImageView posterPath;
-    @BindView(R.id.iv_backdrop_path) ImageView backdropPath;
+    @BindView(R.id.tv_movie_title)
+    TextView movieTitle;
+    @BindView(R.id.tv_release_date)
+    TextView releaseDate;
+    @BindView(R.id.tv_vote_average)
+    TextView voteAverage;
+    @BindView(R.id.tv_overview)
+    TextView overview;
+    @BindView(R.id.iv_poster_path)
+    ImageView posterPath;
+    @BindView(R.id.iv_backdrop_path)
+    ImageView backdropPath;
 
-    @BindView(R.id.rv_trailers) RecyclerView rvTrailer;
-    @BindView(R.id.loading_bar) ProgressBar loadingProgress;
+    @BindView(R.id.rv_trailers)
+    RecyclerView rvTrailer;
+    @BindView(R.id.loading_bar)
+    ProgressBar loadingProgress;
 
     private List<Trailer> trailerList = new ArrayList<>();
     private TrailerAdapter trailerAdapter;
@@ -70,14 +78,15 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
 
         trailerAdapter = new TrailerAdapter(this, trailerList, this);
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvTrailer.setLayoutManager(layoutManager);
         rvTrailer.setAdapter(trailerAdapter);
+        rvTrailer.setNestedScrollingEnabled(true);
 
         loadData(movie.getId());
     }
 
-    private void loadData(int id){
+    private void loadData(int id) {
         URL url = NetworkUtils.buildMovieVideoUrl(String.valueOf(id));
         Log.e("Data JSON:", url.toString());
         new getDataTask().execute(url);
@@ -87,12 +96,12 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
     public void onItemClicked(int position) {
         Trailer trailer = trailerList.get(position);
         String key = trailer.getKey();
-        Toast.makeText(this, "Posisi: " + position + "\nKey: " + key, Toast.LENGTH_SHORT).show();
-        // Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + key));
-        // startActivity(intent);
+        // Toast.makeText(this, "Posisi: " + position + "\nKey: " + key, Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + key));
+        startActivity(intent);
     }
 
-    private class getDataTask extends AsyncTask<URL, Void, String>{
+    private class getDataTask extends AsyncTask<URL, Void, String> {
 
         @Override
         protected void onPreExecute() {
@@ -109,7 +118,7 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
 
             try {
                 result = NetworkUtils.getResponseFromHttpUrl(url);
-            } catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -123,12 +132,12 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
             try {
                 JSONArray result = new JSONObject(s)
                         .getJSONArray("results");
-                for (int i = 0; i < result.length(); i++){
+                for (int i = 0; i < result.length(); i++) {
                     trailerList.add(new Trailer(
                             result.getJSONObject(i).getString("key"),
                             result.getJSONObject(i).getString("name"),
                             result.getJSONObject(i).getString("id")
-                            ));
+                    ));
                 }
 
                 rvTrailer.setVisibility(View.VISIBLE);
