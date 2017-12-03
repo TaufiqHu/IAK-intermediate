@@ -22,9 +22,10 @@ public class NetworkUtils {
 
     final static private String PARAM_API_KEY = "api_key";
     final static private String API_KEY = "a08085d9485c9938fececa708c6cf347";
-    final static private String IMAGE_SIZE = "w185";
+    final static private String IMAGE_SIZE = "w500";
     final static private String VIDEOS_ENDPOINT_SEGMENT = "videos";
     final static private String REVIEWS_ENDPOINT_SEGMENT = "reviews";
+    final static private String YOUTUBE_THUMBNAIL = "https://img.youtube.com/vi/";
 
 
     /**
@@ -125,6 +126,21 @@ public class NetworkUtils {
             e.printStackTrace();
         }
 
+        return url;
+    }
+
+    public static URL getYoutubeThumbnail(String key) {
+        Uri builtUri = Uri.parse(YOUTUBE_THUMBNAIL).buildUpon()
+                .appendPath(key)
+                .appendPath("0.jpg")
+                .build();
+
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
         return url;
     }
 

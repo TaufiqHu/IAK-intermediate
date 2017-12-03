@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -18,6 +19,7 @@ import butterknife.ButterKnife;
 import id.educo.popularmovies.R;
 import id.educo.popularmovies.model.Movie;
 import id.educo.popularmovies.utils.NetworkUtils;
+import id.educo.popularmovies.utils.RecyclerViewItemClickListener;
 
 /**
  * Created by Tito on 01/12/17.
@@ -27,17 +29,13 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     private Context context;
     private List<Movie> movieList;
+    private RecyclerViewItemClickListener recyclerViewItemClickListener;
 
-    public MovieAdapter(Context context, List<Movie> movieList) {
+    public MovieAdapter(Context context, List<Movie> movieList, RecyclerViewItemClickListener recyclerViewItemClickListener) {
         this.context = context;
         this.movieList = movieList;
+        this.recyclerViewItemClickListener = recyclerViewItemClickListener;
     }
-
-    public MovieAdapter(Context context){
-        this.context = context;
-    }
-
-
 
     @Override
     public MovieViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -45,15 +43,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         return new MovieViewHolder(view);
     }
 
-
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         holder.movie = movieList.get(position);
         Glide.with(context)
                 .load(NetworkUtils.buildMoviePosterUrl(holder.movie.getPosterPath()))
                 .into(holder.moviePoster);
+        holder.itemView.setOnClickListener(view -> {
+            int itemPosition = holder.getAdapterPosition();
+            recyclerViewItemClickListener.onItemClicked(itemPosition);
+        });
     }
-
 
     @Override
     public int getItemCount() {
@@ -66,7 +66,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         ImageView moviePoster;
 
         Movie movie;
-
 
         public MovieViewHolder(View itemView) {
             super(itemView);
