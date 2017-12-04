@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -27,8 +26,10 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import id.educo.popularmovies.adapter.ReviewAdapter;
 import id.educo.popularmovies.adapter.TrailerAdapter;
 import id.educo.popularmovies.model.Movie;
+import id.educo.popularmovies.model.Review;
 import id.educo.popularmovies.model.Trailer;
 import id.educo.popularmovies.utils.NetworkUtils;
 import id.educo.popularmovies.utils.RecyclerViewItemClickListener;
@@ -53,8 +54,13 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
     @BindView(R.id.loading_bar)
     ProgressBar loadingProgress;
 
+    @BindView(R.id.rv_reviews) RecyclerView rvReview;
+
     private List<Trailer> trailerList = new ArrayList<>();
     private TrailerAdapter trailerAdapter;
+
+    private List<Review> reviewList = new ArrayList<>();
+    private ReviewAdapter reviewAdapter;
 
     public static final String MOVIE_INTENT = "movie.intent";
 
@@ -63,8 +69,11 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Movie movie = getIntent().getParcelableExtra(MOVIE_INTENT);
+        getSupportActionBar().setTitle(movie.getTitle());
+
         movieTitle.setText(movie.getTitle());
         releaseDate.setText("Release Date: " + movie.getReleaseDate());
         voteAverage.setText("Rating: " + movie.getVoteAverate() + "/10");
@@ -77,19 +86,32 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
                 .into(backdropPath);
 
         trailerAdapter = new TrailerAdapter(this, trailerList, this);
+        reviewAdapter = new ReviewAdapter(this, reviewList);
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        rvTrailer.setLayoutManager(layoutManager);
+        RecyclerView.LayoutManager layoutManagerHorizontal = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView.LayoutManager layoutManagerVertical = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        rvTrailer.setLayoutManager(layoutManagerHorizontal);
         rvTrailer.setAdapter(trailerAdapter);
         rvTrailer.setNestedScrollingEnabled(true);
+
+        rvReview.setLayoutManager(layoutManagerVertical);
+        rvReview.setAdapter(reviewAdapter);
+        rvReview.setNestedScrollingEnabled(true);
 
         loadData(movie.getId());
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return super.onSupportNavigateUp();
+    }
+
     private void loadData(int id) {
-        URL url = NetworkUtils.buildMovieVideoUrl(String.valueOf(id));
-        Log.e("Data JSON:", url.toString());
-        new getDataTask().execute(url);
+        URL videoUrl = NetworkUtils.buildMovieVideoUrl(String.valueOf(id));
+        URL reviewUrl = NetworkUtils.buildMovieReviewUrl(String.valueOf(id));
+        new getDataTrailer().execute(videoUrl);
+        new getDataReview().execute(reviewUrl);
     }
 
     @Override
@@ -101,7 +123,7 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         startActivity(intent);
     }
 
-    private class getDataTask extends AsyncTask<URL, Void, String> {
+    private class getDataTrailer extends AsyncTask<URL, Void, String> {
 
         @Override
         protected void onPreExecute() {
@@ -144,7 +166,43 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
                 loadingProgress.setVisibility(View.GONE);
 
                 trailerAdapter.notifyDataSetChanged();
-                Log.i("Data: ", result.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class getDataReview extends AsyncTask<URL, Void, String>{
+        @Override
+        protected String doInBackground(URL... urls) {
+            URL url = urls[0];
+            String result = null;
+
+            try {
+                result = NetworkUtils.getResponseFromHttpUrl(url);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            try {
+                JSONArray result = new JSONObject(s)
+                        .getJSONArray("results");
+                for (int i = 0; i < result.length(); i++) {
+                    reviewList.add(new Review(
+                            result.getJSONObject(i).getString("author"),
+                            result.getJSONObject(i).getString("content")
+                    ));
+                }
+                rvReview.setVisibility(View.VISIBLE);
+
+                reviewAdapter.notifyDataSetChanged();
             } catch (JSONException e) {
                 e.printStackTrace();
             }

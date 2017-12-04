@@ -92,6 +92,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:text="Summary:"
+                android:textStyle="bold"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
             <TextView
@@ -107,6 +108,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:text="Trailer:"
+                android:textStyle="bold"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
             <android.support.v7.widget.RecyclerView
@@ -125,7 +127,13 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:text="Review:"
+                android:textStyle="bold"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_reviews"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 </android.support.design.widget.CoordinatorLayout>
