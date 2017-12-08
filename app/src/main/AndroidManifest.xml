@@ -22,6 +22,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".DetailActivity" />
+        <provider
+            android:authorities="id.educo.popularmovies"
+            android:name="id.educo.popularmovies.data.MovieContentProvider" />
     </application>
 
 </manifest>

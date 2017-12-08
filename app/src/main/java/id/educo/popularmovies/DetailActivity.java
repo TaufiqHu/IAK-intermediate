@@ -1,17 +1,22 @@
 package id.educo.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -26,8 +31,10 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import id.educo.popularmovies.adapter.ReviewAdapter;
 import id.educo.popularmovies.adapter.TrailerAdapter;
+import id.educo.popularmovies.data.MovieContract;
 import id.educo.popularmovies.model.Movie;
 import id.educo.popularmovies.model.Review;
 import id.educo.popularmovies.model.Trailer;
@@ -36,18 +43,12 @@ import id.educo.popularmovies.utils.RecyclerViewItemClickListener;
 
 public class DetailActivity extends AppCompatActivity implements RecyclerViewItemClickListener {
 
-    @BindView(R.id.tv_movie_title)
-    TextView movieTitle;
-    @BindView(R.id.tv_release_date)
-    TextView releaseDate;
-    @BindView(R.id.tv_vote_average)
-    TextView voteAverage;
-    @BindView(R.id.tv_overview)
-    TextView overview;
-    @BindView(R.id.iv_poster_path)
-    ImageView posterPath;
-    @BindView(R.id.iv_backdrop_path)
-    ImageView backdropPath;
+    @BindView(R.id.tv_movie_title) TextView movieTitle;
+    @BindView(R.id.tv_release_date) TextView releaseDate;
+    @BindView(R.id.tv_vote_average) TextView voteAverage;
+    @BindView(R.id.tv_overview) TextView overview;
+    @BindView(R.id.iv_poster_path) ImageView posterPath;
+    @BindView(R.id.iv_backdrop_path) ImageView backdropPath;
 
     @BindView(R.id.rv_trailers)
     RecyclerView rvTrailer;
@@ -55,6 +56,10 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
     ProgressBar loadingProgress;
 
     @BindView(R.id.rv_reviews) RecyclerView rvReview;
+    @BindView(R.id.favorite_button)
+    FloatingActionButton favoriteButton;
+    @BindView(R.id.unfavorite_button)
+    FloatingActionButton unfavoriteButton;
 
     private List<Trailer> trailerList = new ArrayList<>();
     private TrailerAdapter trailerAdapter;
@@ -62,6 +67,7 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
     private List<Review> reviewList = new ArrayList<>();
     private ReviewAdapter reviewAdapter;
 
+    private Movie movie;
     public static final String MOVIE_INTENT = "movie.intent";
 
     @Override
@@ -71,7 +77,7 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         ButterKnife.bind(this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Movie movie = getIntent().getParcelableExtra(MOVIE_INTENT);
+        movie = getIntent().getParcelableExtra(MOVIE_INTENT);
         getSupportActionBar().setTitle(movie.getTitle());
 
         movieTitle.setText(movie.getTitle());
@@ -98,7 +104,8 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         rvReview.setAdapter(reviewAdapter);
         rvReview.setNestedScrollingEnabled(true);
 
-        loadData(movie.getId());
+        loadData(String.valueOf(movie.getId()));
+        isExistInFavorite(movie.getId());
     }
 
     @Override
@@ -107,9 +114,9 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         return super.onSupportNavigateUp();
     }
 
-    private void loadData(int id) {
-        URL videoUrl = NetworkUtils.buildMovieVideoUrl(String.valueOf(id));
-        URL reviewUrl = NetworkUtils.buildMovieReviewUrl(String.valueOf(id));
+    private void loadData(String id) {
+        URL videoUrl = NetworkUtils.buildMovieVideoUrl(id);
+        URL reviewUrl = NetworkUtils.buildMovieReviewUrl(id);
         new getDataTrailer().execute(videoUrl);
         new getDataReview().execute(reviewUrl);
     }
@@ -121,6 +128,23 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
         // Toast.makeText(this, "Posisi: " + position + "\nKey: " + key, Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + key));
         startActivity(intent);
+    }
+
+    private void isExistInFavorite(int idMovie){
+        int num = 0;
+        Cursor cursor;
+
+            cursor = getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI,
+                    new String[] {MovieContract.MovieEntry.COLUMN_ID},
+                    MovieContract.MovieEntry.COLUMN_ID + " = ?",
+                    new String[] {String.valueOf(idMovie)},
+                    null);
+
+        if (cursor.getCount()>0){
+            favoriteButton.setVisibility(View.GONE);
+            unfavoriteButton.setVisibility(View.VISIBLE);
+        }
+        cursor.close();
     }
 
     private class getDataTrailer extends AsyncTask<URL, Void, String> {
@@ -189,8 +213,6 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
 
         @Override
         protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
             try {
                 JSONArray result = new JSONObject(s)
                         .getJSONArray("results");
@@ -206,6 +228,47 @@ public class DetailActivity extends AppCompatActivity implements RecyclerViewIte
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            super.onPostExecute(s);
         }
+    }
+    public void save_movie(View v){
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(MovieContract.MovieEntry.COLUMN_ID, movie.getId());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getTitle());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVEGARE, movie.getVoteAverate());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, movie.getPosterPath());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, movie.getOverview());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_BACKDROP_PATH, movie.getBackdropPath());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, movie.getVoteCount());
+        contentValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, movie.getPopularity());
+
+        favoriteButton.setVisibility(View.GONE);
+        unfavoriteButton.setVisibility(View.VISIBLE);
+
+        // Insert the content values via a ContentResolver
+        Uri uri = getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+        Log.i("DATA", uri.toString());
+
+        if(uri != null) {
+            Toast.makeText(getBaseContext(), "Berhasil Menambahkan ke Daftar Favorite.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void delete_movie(View view){
+        String[] stringArray = {String.valueOf(movie.getId())};
+
+        favoriteButton.setVisibility(View.VISIBLE);
+        unfavoriteButton.setVisibility(View.GONE);
+
+        // Insert the content values via a ContentResolver
+        int res = getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, stringArray);
+        Log.i("DATA", String.valueOf(res));
+
+        if(res > 0) {
+            Toast.makeText(getBaseContext(), "Dihapus Dari Daftar Favorite.", Toast.LENGTH_LONG).show();
+        }
+
     }
 }

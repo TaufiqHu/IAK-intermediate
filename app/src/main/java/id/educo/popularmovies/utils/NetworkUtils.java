@@ -129,6 +129,12 @@ public class NetworkUtils {
         return url;
     }
 
+    /** Function to get the Youtube Thumbnails
+     *
+     * @Param key, the Youtube Movie_Key source
+     *
+     * Return URL Sampel: https://img.youtube.com/vi/MOVIE_KEY/0.jpg
+     */
     public static URL getYoutubeThumbnail(String key) {
         Uri builtUri = Uri.parse(YOUTUBE_THUMBNAIL).buildUpon()
                 .appendPath(key)
